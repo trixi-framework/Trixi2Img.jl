@@ -1,7 +1,7 @@
 """
     convert(filename::AbstractString...;
             format=:png, variables=[], verbose=false, grid_lines=false,
-            output_directory=".", nvisnodes=nothing)
+            output_directory=".", nvisnodes=nothing, max_supported_level=11)
 
 Convert two-dimensional Trixi-generated output files to image files (PNG or PDF).
 
@@ -17,6 +17,7 @@ Convert two-dimensional Trixi-generated output files to image files (PNG or PDF)
 - `output_directory`: Output directory where generated files are stored.
 - `nvisnodes`: Number of visualization nodes per element (default: twice the number of DG nodes).
                A value of `0` (zero) uses the number of nodes in the DG elements.
+- `max_supported_level`: Maximum cell refinement level supported for plotting.
 
 # Examples
 ```julia
@@ -26,7 +27,7 @@ julia> Trixi2Img.convert("out/solution_000*.h5")
 """
 function convert(filename::AbstractString...;
                  format=:png, variables=[], verbose=false, grid_lines=false,
-                 output_directory=".", nvisnodes=nothing)
+                 output_directory=".", nvisnodes=nothing, max_supported_level=11)
   # Reset timer
   reset_timer!()
 
@@ -69,15 +70,12 @@ function convert(filename::AbstractString...;
     # Read data
     verbose && println("| Reading data file...")
     @timeit "read data" labels, unstructured_data, n_nodes, time = read_datafile(filename)
-    #=@show minimum(unstructured_data), maximum(unstructured_data)=#
-
 
     # Determine resolution for data interpolation
     max_level = maximum(levels)
     if max_level > max_supported_level
-      println(stderr, "Maximum refinement level in data file $max_level is higher than " *
-                      "maximum supported level $max_supported_level")
-      exit(1)
+      error("Maximum refinement level in data file $max_level is higher than " *
+            "maximum supported level $max_supported_level")
     end
     max_available_nodes_per_finest_element = 2^(max_supported_level - max_level)
     if nvisnodes == nothing
@@ -93,13 +91,6 @@ function convert(filename::AbstractString...;
     # nvisnodes_per_level is an array (accessed by "level + 1" to accommodate
     # level-0-cell) that contains the number of visualization nodes for any
     # refinement level to visualize on an equidistant grid
-    #=@show max_supported_level=#
-    #=@show max_level=#
-    #=@show max_available_nodes_per_finest_element=#
-    #=@show max_nvisnodes=#
-    #=@show nvisnodes_at_max_level=#
-    #=@show resolution=#
-    #=@show nvisnodes_per_level=#
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
     n_elements = length(levels)
@@ -111,15 +102,12 @@ function convert(filename::AbstractString...;
 
     # Interpolate unstructured DG data to structured data
     verbose && println("| Interpolating data...")
-    #=@show minimum(unstructured_data), maximum(unstructured_data)=#
     @timeit "interpolate data" (structured_data =
         unstructured2structured(unstructured_data, normalized_coordinates,
                                 levels, resolution, nvisnodes_per_level))
 
     # Interpolate cell-centered values to node-centered values
-    #=@show minimum(structured_data), maximum(structured_data)=#
     node_centered_data = cell2node(structured_data)
-    #=@show minimum(node_centered_data), maximum(node_centered_data)=#
 
     # Determine axis coordinates for contour plot
     xs = collect(range(-1, 1, length=resolution+1)) .* length_level_0/2 .+ center_level_0[1]

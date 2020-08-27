@@ -8,10 +8,12 @@ using TimerOutputs
 import GR
 
 # Number of spatial dimensions
-const ndim = 2
+"""
+    ndims
 
-# Maximum level of cells supported for plotting
-const max_supported_level = 11 # -> at most 2^11 = 2048 visualization nodes
+Number of spatial dimensions (= 2).
+"""
+const ndim = 2
 
 # Include all source files
 include("interpolation.jl")
