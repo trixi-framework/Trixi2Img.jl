@@ -7,13 +7,13 @@ const ndim = 2
 const max_supported_level = 11 # -> at most 2^11 = 2048 visualization nodes
 
 using ArgParse: ArgParseSettings, @add_arg_table!, parse_args
-using HDF5: h5open, attrs
-using Plots: plot, plot!, gr, savefig, text, contourf, contourf!
+using HDF5: h5open, attrs, exists
+using Plots: plot, plot!, gr, savefig, contourf!
 using TimerOutputs
 import GR
 
 # Get useful bits and pieces from Trixi
-using Trixi: gauss_lobatto_nodes_weights, interpolate_nodes, polynomial_interpolation_matrix
+include("interpolation.jl")
 
 
 """
@@ -209,7 +209,7 @@ function run(; args=nothing, kwargs...)
       # Plot contours
       verbose && println("| | | Plotting contours...")
       @timeit "plot contours" contourf!(xs, ys, node_centered_data[:, :, variable_id],
-                                        c=:bluesreds, levels=20)
+                                        c=:bluesreds, levels=128, linewidth=0)
 
       # Plot grid lines
       if args["grid_lines"]
@@ -496,7 +496,11 @@ function read_meshfile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    ndim = read(attrs(file)["ndim"])
+    if exists(attrs(file), "ndims")
+      ndims_ = read(attrs(file)["ndims"])
+    else
+      ndims_ = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
+    end
     n_cells = read(attrs(file)["n_cells"])
     n_leaf_cells = read(attrs(file)["n_leaf_cells"])
     center_level_0 = read(attrs(file)["center_level_0"])
