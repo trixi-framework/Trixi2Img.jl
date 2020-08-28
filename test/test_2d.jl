@@ -18,11 +18,11 @@ isdir(outdir) && rm(outdir, recursive=true)
         hashes=[("solution_000000_scalar.png", "f7da610fc8ab16aa691b1b0ecd956d67d6f68e06")])
   end
 
-  # @testset "uniform mesh as PDF with grid lines" begin
-  #   test_trixi2img_convert("solution_000000.h5", outdir,
-  #       hashes=[("solution_000000_scalar.png", "1ec2c93c0c9c4f4992dea54afaf2a348ece0160e")],
-  #       format=:pdf, grid_lines=true)
-  # end
+  @testset "uniform mesh as PDF with grid lines" begin
+    test_trixi2img_convert("solution_000000.h5", outdir,
+        hashes=[("solution_000000_scalar.pdf", "e62024c18ae010748f8c7b840bf7475ae398799a")],
+        format=:pdf, grid_lines=true)
+  end
 end
 
 # Clean up afterwards: delete Trixi output directory
