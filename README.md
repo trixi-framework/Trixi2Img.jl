@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 <!-- [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Img.jl/v0.1.0.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Img.jl) -->
 
-With **Trixi2Img.jl** you can create PDF/PNG from 2D output files created by
+**Trixi2Img.jl** can create PDF/PNG from 2D output files created by
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
 files). Trixi2Img is part of the [Trixi framework](https://github.com/trixi-framework).
 
@@ -67,8 +67,8 @@ Trixi2Img is maintained by the
 [Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/master/AUTHORS.md).
 Its principal developers are
 [Michael Schlottke-Lakemper](https://www.mi.uni-koeln.de/NumSim/schlottke-lakemper)
-(University of Cologne, Germany) and [Hendrik Ranocha](https://ranocha.de)
-(KAUST, Saudi Arabia).
+(University of Cologne, Germany) and
+[Hendrik Ranocha](https://ranocha.de) (KAUST, Saudi Arabia).
 
 
 ## License and contributing
