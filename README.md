@@ -1,7 +1,7 @@
 # Trixi2Img.jl
 
 <!-- [![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/Trixi2Img.jl/stable) -->
-<!-- [![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://trixi-framework.github.io/Trixi2Img.jl/dev) -->
+[![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://trixi-framework.github.io/Trixi2Img.jl/dev)
 [![Build Linux & macOS](https://travis-ci.com/trixi-framework/Trixi2Img.jl.svg?branch=master)](https://travis-ci.com/trixi-framework/Trixi2Img.jl)
 [![Build Windows](https://ci.appveyor.com/api/projects/status/0q5gk3pmgnrfp5g9?svg=true)](https://ci.appveyor.com/project/ranocha/trixi2img-jl)
 [![Codecov](https://codecov.io/gh/trixi-framework/Trixi2Img.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/trixi-framework/Trixi2Img.jl)
