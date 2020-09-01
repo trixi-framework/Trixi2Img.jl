@@ -42,8 +42,8 @@ image viewer:
   <img width="300px" src="docs/src/assets/solution_000040_scalar_resized.png">
 </p>
 
-For further documentation of Trixi.jl and tutorials explaining how to use Trixi
-with Trixi2Img, please refer to the [documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
+For further information on how to use Trixi with Trixi2Img, please refer to the
+[documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
 
 
 ## Authors

@@ -25,9 +25,7 @@ makedocs(
     # Explicitly specify documentation structure
     pages = [
         "Home" => "index.md",
-        "Reference" => [
-            "Trixi2Img" => "reference/trixi2img.md",
-        ],
+        "Reference" => "reference.md",
         "License" => "license.md"
     ]
 )

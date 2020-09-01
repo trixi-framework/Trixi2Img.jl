@@ -4,8 +4,8 @@
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
 files). Trixi2Img is part of the [Trixi framework](https://github.com/trixi-framework).
 
-For further documentation of Trixi.jl and tutorials explaining how to use Trixi
-with Trixi2Img, please refer to the [documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
+For further information on how to use Trixi with Trixi2Img, please refer to the
+[documentation of Trixi](https://trixi-framework.github.io/Trixi.jl/stable/).
 
 
 ## Installation
