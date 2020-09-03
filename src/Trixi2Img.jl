@@ -20,8 +20,8 @@ include("interpolation.jl")
 include("interpolate.jl")
 include("io.jl")
 
-# Include top-level driver method
-include("trixi2img.jl")
+# Include top-level conversion method
+include("convert.jl")
 
 # export types/functions that define the public API of Trixi2Img
 export trixi2img
