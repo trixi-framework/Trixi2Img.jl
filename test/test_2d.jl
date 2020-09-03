@@ -14,7 +14,7 @@ isdir(outdir) && rm(outdir, recursive=true)
   run_trixi(joinpath("2d", "parameters.toml"), n_steps_max=1)
 
   @testset "uniform mesh as PNG" begin
-    test_trixi2img_convert("solution_000000.h5", outdir)
+    test_trixi2img("solution_000000.h5", outdir)
         # To be able to compare hashes, we would need to make sure that exactly the same versions
         # of all required libraries are installed everywhere, which does not seem to be a good option
         # right now.
@@ -24,7 +24,7 @@ isdir(outdir) && rm(outdir, recursive=true)
   # PDF tests do not work on Windows
   if !Sys.iswindows()
     @testset "uniform mesh as PDF with grid lines" begin
-      test_trixi2img_convert("solution_000000.h5", outdir,
+      test_trixi2img("solution_000000.h5", outdir,
           format=:pdf, grid_lines=true)
           # To be able to compare hashes, we would need to make sure that exactly the same versions
           # of all required libraries are installed everywhere, which does not seem to be a good option
