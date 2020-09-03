@@ -29,9 +29,8 @@ function set_pdf_creation_date(filename, date="20200101080000")
 end
 
 
-function test_trixi2img_convert(filenames, outdir; hashes=nothing, kwargs...)
-  @test_nowarn Trixi2Img.convert(joinpath(outdir, filenames);
-                                 output_directory=outdir, kwargs...)
+function test_trixi2img(filenames, outdir; hashes=nothing, kwargs...)
+  @test_nowarn trixi2img(joinpath(outdir, filenames); output_directory=outdir, kwargs...)
 
   if !isnothing(hashes)
     for (filename, hash_expected) in hashes
