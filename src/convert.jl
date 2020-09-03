@@ -25,9 +25,10 @@ julia> Trixi2Img.convert("out/solution_000*.h5")
 [...]
 ```
 """
-function convert(filename::AbstractString...;
-                 format=:png, variables=[], verbose=false, grid_lines=false,
-                 output_directory=".", nvisnodes=nothing, max_supported_level=11)
+function Trixi2Img.convert(filename::AbstractString...;
+                           format=:png, variables=[], verbose=false, grid_lines=false,
+                           output_directory=".", nvisnodes=nothing, max_supported_level=11)
+  # Note: We have to prefix `Trixi2Img.` to `convert` to avoid overwriting `Base.convert`
   # Reset timer
   reset_timer!()
 
