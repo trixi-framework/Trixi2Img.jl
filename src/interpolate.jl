@@ -40,6 +40,53 @@ function cell2node(cell_centered_data::AbstractArray{Float64})
 end
 
 
+function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
+                               coordinates::AbstractArray{Float64},
+                               levels::AbstractArray{Int})
+   # Extract data shape information
+   n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
+
+   # Get node coordinates for DG locations on reference element
+   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
+
+   # TODO hardcoded value
+   vandermonde_to_2d = polynomial_interpolation_matrix(nodes_in, [0.3 * 2 - 1])
+
+   new_unstructured_data = similar(unstructured_data[:, 1, :, :, :])
+   new_coordinates = Array{Float64}(undef, 2, 0)
+   new_levels = Array{eltype(levels)}(undef, 0)
+
+   new_id = 0
+
+   for v in 1:n_variables
+     for element_id in 1:n_elements
+       first_coordinate = coordinates[:, element_id] .- 0.5 # TODO hardcoded value
+       last_coordinate = coordinates[:, element_id] .+ 0.5
+
+       if first_coordinate[2] <= 0.3 && last_coordinate[2] > 0.3 # TODO axis intersect == 1
+         # This element is of interest
+         new_id += 1
+         new_coordinates = hcat(new_coordinates, coordinates[[1, 3], element_id])
+         push!(new_levels, levels[element_id])
+
+         for x in 1:n_nodes_in
+           for z in 1:n_nodes_in
+             value = vandermonde_to_2d * unstructured_data[x, :, z, element_id, v]
+             new_unstructured_data[x, z, new_id, v] = value[1]
+           end
+         end
+       end
+     end
+   end
+
+   unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
+   coordinates = new_coordinates
+   levels = new_levels
+
+   return unstructured_data, coordinates, levels
+end
+
+
 # Interpolate unstructured DG data to structured data (cell-centered)
 function unstructured2structured(unstructured_data::AbstractArray{Float64},
                                  normalized_coordinates::AbstractArray{Float64},
@@ -241,4 +288,3 @@ function calc_vertices(coordinates::AbstractArray{Float64, 2},
 
   return x, y
 end
-

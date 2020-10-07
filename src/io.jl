@@ -1,3 +1,5 @@
+using EllipsisNotation
+
 # Use data file to extract mesh filename from attributes
 function extract_mesh_filename(filename::String)
   # Open file for reading
@@ -12,7 +14,6 @@ end
 
 # Read in mesh file and return relevant data
 function read_meshfile(filename::String)
-  n_children_per_cell = 2^ndim
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
@@ -21,13 +22,14 @@ function read_meshfile(filename::String)
     else
       ndims_ = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
     end
+    n_children_per_cell = 2^ndims_
     n_cells = read(attrs(file)["n_cells"])
     n_leaf_cells = read(attrs(file)["n_leaf_cells"])
     center_level_0 = read(attrs(file)["center_level_0"])
     length_level_0 = read(attrs(file)["length_level_0"])
 
     # Extract coordinates, levels, child cells
-    coordinates = Array{Float64}(undef, ndim, n_cells)
+    coordinates = Array{Float64}(undef, ndims_, n_cells)
     coordinates .= read(file["coordinates"])
     levels = Array{Int}(undef, n_cells)
     levels .= read(file["levels"])
@@ -50,12 +52,12 @@ function read_meshfile(filename::String)
     coordinates = coordinates[:, leaf_cells]
     levels = levels[leaf_cells]
 
-    return center_level_0, length_level_0, leaf_cells, coordinates, levels
+    return center_level_0, length_level_0, leaf_cells, coordinates, levels, ndims_
   end
 end
 
 
-function read_datafile(filename::String)
+function read_datafile(filename::String, ndims::Int64)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
@@ -76,14 +78,17 @@ function read_datafile(filename::String)
 
     # Extract data arrays
     n_nodes = polydeg + 1
-    data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
+    if ndims == 3
+      data = Array{Float64}(undef, n_nodes, n_nodes, n_nodes, n_elements, n_variables)
+    else
+      data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
+    end
     for v = 1:n_variables
       vardata = read(file["variables_$v"])
       #=@show minimum(vardata), maximum(vardata)=#
-      @views data[:, :, :, v][:] .= vardata
+      @views data[.., v][:] .= vardata # TODO why does [.., :, v] not work?
     end
 
     return labels, data, n_nodes, time
   end
 end
-
