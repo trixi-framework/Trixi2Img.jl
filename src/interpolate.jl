@@ -42,7 +42,7 @@ end
 
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
-                               levels::AbstractArray{Int})
+                               levels::AbstractArray{Int}, length_level_0::Float64)
    # Extract data shape information
    n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
 
@@ -60,8 +60,9 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
 
    for v in 1:n_variables
      for element_id in 1:n_elements
-       first_coordinate = coordinates[:, element_id] .- 0.5 # TODO hardcoded value
-       last_coordinate = coordinates[:, element_id] .+ 0.5
+       center_offset = length_level_0 / 2^(levels[element_id] + 1)
+       first_coordinate = coordinates[:, element_id] .- center_offset
+       last_coordinate = coordinates[:, element_id] .+ center_offset
 
        if first_coordinate[2] <= 0.3 && last_coordinate[2] > 0.3 # TODO axis intersect == 1
          # This element is of interest
