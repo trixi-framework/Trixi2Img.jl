@@ -48,6 +48,17 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                center_level_0::AbstractArray{Float64},
                                slice_axis, slice_axis_intersect)
 
+  dimensions = Dict(
+    :x => 1,
+    :y => 2,
+    :z => 3
+  )
+  if !haskey(dimensions, slice_axis)
+    error("illegal dimension")
+  end
+  slice_axis_dimension = dimensions[slice_axis]
+  other_dimensions = [1, 2, 3][1:end .!= slice_axis_dimension]
+
   # Extract data shape information
   n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
 
@@ -68,9 +79,9 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
   # Save vandermonde matrices in a Dict to prevent redundant generation
   vandermonde_to_2d = Dict()
 
-  # Limits of domain in slice_axis dimension TODO hardcoded value
-  lower_limit = center_level_0[2] - length_level_0 / 2
-  upper_limit = center_level_0[2] + length_level_0 / 2
+  # Limits of domain in slice_axis dimension
+  lower_limit = center_level_0[slice_axis_dimension] - length_level_0 / 2
+  upper_limit = center_level_0[slice_axis_dimension] + length_level_0 / 2
 
   if slice_axis_intersect < lower_limit || slice_axis_intersect > upper_limit
     error("slice_axis_intersect outside of domain")
@@ -83,20 +94,23 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
       first_coordinate = coordinates[:, element_id] .- element_length / 2
       last_coordinate = coordinates[:, element_id] .+ element_length / 2
 
-      # Check if slice plane and current element intersect TODO hardcoded value
-      if (first_coordinate[2] <= slice_axis_intersect &&
-          last_coordinate[2] > slice_axis_intersect) ||
-          (slice_axis_intersect == upper_limit && last_coordinate[2] == upper_limit)
+      # Check if slice plane and current element intersect
+      # The upper limit check is needed because of the > in the first check
+      if (first_coordinate[slice_axis_dimension] <= slice_axis_intersect &&
+            last_coordinate[slice_axis_dimension] > slice_axis_intersect) ||
+          (slice_axis_intersect == upper_limit &&
+            last_coordinate[slice_axis_dimension] == upper_limit)
         # This element is of interest
         new_id += 1
 
         # Add element to new coordinates and levels
-        new_coordinates = hcat(new_coordinates, coordinates[[1, 3], element_id])
+        new_coordinates = hcat(new_coordinates, coordinates[other_dimensions, element_id])
         push!(new_levels, levels[element_id])
 
         # Construct vandermonde matrix (or load from Dict if possible)
-        normalized_intersect = (
-            slice_axis_intersect - first_coordinate[2]) / element_length * 2 - 1
+        normalized_intersect =
+            (slice_axis_intersect - first_coordinate[slice_axis_dimension]) /
+            element_length * 2 - 1
 
         if haskey(vandermonde_to_2d, normalized_intersect)
           vandermonde = vandermonde_to_2d[normalized_intersect]
@@ -107,10 +121,17 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
         end
 
         # 1D interpolation to specified slice plane
-        for x in 1:n_nodes_in
-          for z in 1:n_nodes_in
-            value = vandermonde * unstructured_data[x, :, z, element_id, v]
-            new_unstructured_data[x, z, new_id, v] = value[1]
+        for i in 1:n_nodes_in
+          for ii in 1:n_nodes_in
+            if slice_axis == :x
+              data = unstructured_data[:, i, ii, element_id, v]
+            elseif slice_axis == :y
+              data = unstructured_data[i, :, ii, element_id, v]
+            elseif slice_axis == :z
+              data = unstructured_data[i, ii, :, element_id, v]
+            end
+            value = vandermonde * data
+            new_unstructured_data[i, ii, new_id, v] = value[1]
           end
         end
       end
@@ -120,7 +141,9 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
   # Remove redundant element ids
   unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
 
-  return unstructured_data, new_coordinates, new_levels
+  center_level_0 = center_level_0[other_dimensions]
+
+  return unstructured_data, new_coordinates, new_levels, center_level_0
 end
 
 
