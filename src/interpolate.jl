@@ -44,59 +44,73 @@ end
 # Additional to the new unstructured data updated coordinates and levels are returned.
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
-                               levels::AbstractArray{Int}, length_level_0::Float64)
-   # Extract data shape information
-   n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
+                               levels::AbstractArray{Int}, length_level_0::Float64,
+                               slice_axis, slice_axis_intersect)
 
-   # Get node coordinates for DG locations on reference element
-   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
+  # Extract data shape information
+  n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
 
-   # TODO hardcoded value
-   # Generate vandermonde matrix to interpolate values at nodes_in to one value
-   vandermonde_to_2d = polynomial_interpolation_matrix(nodes_in, [0.3 * 2 - 1])
+  # Get node coordinates for DG locations on reference element
+  nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
 
-   # New unstructured data has one dimension less.
-   # The redundant element ids are removed later.
-   new_unstructured_data = similar(unstructured_data[1, :, :, :, :])
+  # New unstructured data has one dimension less.
+  # The redundant element ids are removed later.
+  new_unstructured_data = similar(unstructured_data[1, :, :, :, :])
 
-   # Declare new empty arrays to fill in new coordinates and levels
-   new_coordinates = Array{Float64}(undef, 2, 0)
-   new_levels = Array{eltype(levels)}(undef, 0)
+  # Declare new empty arrays to fill in new coordinates and levels
+  new_coordinates = Array{Float64}(undef, 2, 0)
+  new_levels = Array{eltype(levels)}(undef, 0)
 
-   # Counter for new element ids
-   new_id = 0
+  # Counter for new element ids
+  new_id = 0
 
-   for v in 1:n_variables
-     for element_id in 1:n_elements
-       # Distance from center to border of this element (half the length)
-       center_offset = length_level_0 / 2^(levels[element_id] + 1)
-       first_coordinate = coordinates[:, element_id] .- center_offset
-       last_coordinate = coordinates[:, element_id] .+ center_offset
+  # Save vandermonde matrices in a Dict to prevent redundant generation
+  vandermonde_to_2d = Dict()
 
-       # Check if slice plane and current element intersect
-       if first_coordinate[2] <= 0.3 && last_coordinate[2] > 0.3 # TODO axis intersect == 1
-         # This element is of interest
-         new_id += 1
+  for v in 1:n_variables
+    for element_id in 1:n_elements
+      # Distance from center to border of this element (half the length)
+      element_length = length_level_0 / 2^levels[element_id]
+      first_coordinate = coordinates[:, element_id] .- element_length / 2
+      last_coordinate = coordinates[:, element_id] .+ element_length / 2
 
-         # Add element to new coordinates and levels
-         new_coordinates = hcat(new_coordinates, coordinates[[1, 3], element_id])
-         push!(new_levels, levels[element_id])
+      # Check if slice plane and current element intersect
+      if first_coordinate[2] <= slice_axis_intersect &&
+          last_coordinate[2] > slice_axis_intersect # TODO axis intersect at upper domain border
+        # This element is of interest
+        new_id += 1
 
-         # 1D interpolation to specified slice plane
-         for x in 1:n_nodes_in
-           for z in 1:n_nodes_in
-             value = vandermonde_to_2d * unstructured_data[x, :, z, element_id, v]
-             new_unstructured_data[x, z, new_id, v] = value[1]
-           end
-         end
-       end
-     end
-   end
+        # Add element to new coordinates and levels
+        new_coordinates = hcat(new_coordinates, coordinates[[1, 3], element_id])
+        push!(new_levels, levels[element_id])
 
-   # Remove redundant element ids
-   unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
+        # Construct vandermonde matrix (or load from Dict if possible)
+        normalized_intersect = (
+            slice_axis_intersect - first_coordinate[2]) / element_length * 2 - 1
 
-   return unstructured_data, new_coordinates, new_levels
+        if haskey(vandermonde_to_2d, normalized_intersect)
+          vandermonde = vandermonde_to_2d[normalized_intersect]
+        else
+          # Generate vandermonde matrix to interpolate values at nodes_in to one value
+          vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intersect])
+          vandermonde_to_2d[normalized_intersect] = vandermonde
+        end
+
+        # 1D interpolation to specified slice plane
+        for x in 1:n_nodes_in
+          for z in 1:n_nodes_in
+            value = vandermonde * unstructured_data[x, :, z, element_id, v]
+            new_unstructured_data[x, z, new_id, v] = value[1]
+          end
+        end
+      end
+    end
+  end
+
+  # Remove redundant element ids
+  unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
+
+  return unstructured_data, new_coordinates, new_levels
 end
 
 

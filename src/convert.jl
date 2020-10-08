@@ -27,7 +27,8 @@ julia> trixi2img("out/solution_000*.h5")
 """
 function trixi2img(filename::AbstractString...;
                    format=:png, variables=[], verbose=false, grid_lines=false,
-                   output_directory=".", nvisnodes=nothing, max_supported_level=11)
+                   output_directory=".", nvisnodes=nothing, max_supported_level=11,
+                   slice_axis=:x, slice_axis_intersect=0)
   # Reset timer
   reset_timer!()
 
@@ -95,7 +96,8 @@ function trixi2img(filename::AbstractString...;
     if ndims_ == 3
       # convert 3d unstructured data to 2d slice
       unstructured_data, coordinates, levels = unstructured_2d_to_3d(
-          unstructured_data, coordinates, levels, length_level_0)
+          unstructured_data, coordinates, levels, length_level_0,
+          slice_axis, slice_axis_intersect)
       center_level_0 = center_level_0[[1, 3]] # TODO hardcoded value
     end
 
