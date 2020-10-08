@@ -45,6 +45,7 @@ end
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
                                levels::AbstractArray{Int}, length_level_0::Float64,
+                               center_level_0::AbstractArray{Float64},
                                slice_axis, slice_axis_intersect)
 
   # Extract data shape information
@@ -67,6 +68,14 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
   # Save vandermonde matrices in a Dict to prevent redundant generation
   vandermonde_to_2d = Dict()
 
+  # Limits of domain in slice_axis dimension TODO hardcoded value
+  lower_limit = center_level_0[2] - length_level_0 / 2
+  upper_limit = center_level_0[2] + length_level_0 / 2
+
+  if slice_axis_intersect < lower_limit || slice_axis_intersect > upper_limit
+    error("slice_axis_intersect outside of domain")
+  end
+
   for v in 1:n_variables
     for element_id in 1:n_elements
       # Distance from center to border of this element (half the length)
@@ -74,9 +83,10 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
       first_coordinate = coordinates[:, element_id] .- element_length / 2
       last_coordinate = coordinates[:, element_id] .+ element_length / 2
 
-      # Check if slice plane and current element intersect
-      if first_coordinate[2] <= slice_axis_intersect &&
-          last_coordinate[2] > slice_axis_intersect # TODO axis intersect at upper domain border
+      # Check if slice plane and current element intersect TODO hardcoded value
+      if (first_coordinate[2] <= slice_axis_intersect &&
+          last_coordinate[2] > slice_axis_intersect) ||
+          (slice_axis_intersect == upper_limit && last_coordinate[2] == upper_limit)
         # This element is of interest
         new_id += 1
 
