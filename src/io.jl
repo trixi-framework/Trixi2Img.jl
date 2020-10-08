@@ -78,9 +78,12 @@ function read_datafile(filename::String, ndims::Int64)
 
     # Extract data arrays
     n_nodes = polydeg + 1
+
     if ndims == 3
+      # Read 3d data
       data = Array{Float64}(undef, n_nodes, n_nodes, n_nodes, n_elements, n_variables)
     else
+      # Read 2d data
       data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
     end
     for v = 1:n_variables

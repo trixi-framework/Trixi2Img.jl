@@ -93,6 +93,7 @@ function trixi2img(filename::AbstractString...;
     # refinement level to visualize on an equidistant grid
 
     if ndims_ == 3
+      # convert 3d unstructured data to 2d slice
       unstructured_data, coordinates, levels = unstructured_2d_to_3d(
           unstructured_data, coordinates, levels, length_level_0)
       center_level_0 = center_level_0[[1, 3]] # TODO hardcoded value

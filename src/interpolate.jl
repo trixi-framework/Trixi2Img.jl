@@ -40,6 +40,8 @@ function cell2node(cell_centered_data::AbstractArray{Float64})
 end
 
 
+# Convert 3d unstructured data to 2d slice.
+# Additional to the new unstructured data updated coordinates and levels are returned.
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
                                levels::AbstractArray{Int}, length_level_0::Float64)
@@ -50,26 +52,37 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
    nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
 
    # TODO hardcoded value
+   # Generate vandermonde matrix to interpolate values at nodes_in to one value
    vandermonde_to_2d = polynomial_interpolation_matrix(nodes_in, [0.3 * 2 - 1])
 
-   new_unstructured_data = similar(unstructured_data[:, 1, :, :, :])
+   # New unstructured data has one dimension less.
+   # The redundant element ids are removed later.
+   new_unstructured_data = similar(unstructured_data[1, :, :, :, :])
+
+   # Declare new empty arrays to fill in new coordinates and levels
    new_coordinates = Array{Float64}(undef, 2, 0)
    new_levels = Array{eltype(levels)}(undef, 0)
 
+   # Counter for new element ids
    new_id = 0
 
    for v in 1:n_variables
      for element_id in 1:n_elements
+       # Distance from center to border of this element (half the length)
        center_offset = length_level_0 / 2^(levels[element_id] + 1)
        first_coordinate = coordinates[:, element_id] .- center_offset
        last_coordinate = coordinates[:, element_id] .+ center_offset
 
+       # Check if slice plane and current element intersect
        if first_coordinate[2] <= 0.3 && last_coordinate[2] > 0.3 # TODO axis intersect == 1
          # This element is of interest
          new_id += 1
+
+         # Add element to new coordinates and levels
          new_coordinates = hcat(new_coordinates, coordinates[[1, 3], element_id])
          push!(new_levels, levels[element_id])
 
+         # 1D interpolation to specified slice plane
          for x in 1:n_nodes_in
            for z in 1:n_nodes_in
              value = vandermonde_to_2d * unstructured_data[x, :, z, element_id, v]
@@ -80,11 +93,10 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
      end
    end
 
+   # Remove redundant element ids
    unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
-   coordinates = new_coordinates
-   levels = new_levels
 
-   return unstructured_data, coordinates, levels
+   return unstructured_data, new_coordinates, new_levels
 end
 
 
