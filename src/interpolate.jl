@@ -87,42 +87,42 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
     error("slice_axis_intersect outside of domain")
   end
 
-  for v in 1:n_variables
-    for element_id in 1:n_elements
-      # Distance from center to border of this element (half the length)
-      element_length = length_level_0 / 2^levels[element_id]
-      first_coordinate = coordinates[:, element_id] .- element_length / 2
-      last_coordinate = coordinates[:, element_id] .+ element_length / 2
+  for element_id in 1:n_elements
+    # Distance from center to border of this element (half the length)
+    element_length = length_level_0 / 2^levels[element_id]
+    first_coordinate = coordinates[:, element_id] .- element_length / 2
+    last_coordinate = coordinates[:, element_id] .+ element_length / 2
 
-      # Check if slice plane and current element intersect
-      # The upper limit check is needed because of the > in the first check
-      if (first_coordinate[slice_axis_dimension] <= slice_axis_intersect &&
-            last_coordinate[slice_axis_dimension] > slice_axis_intersect) ||
-          (slice_axis_intersect == upper_limit &&
-            last_coordinate[slice_axis_dimension] == upper_limit)
-        # This element is of interest
-        new_id += 1
+    # Check if slice plane and current element intersect
+    # The upper limit check is needed because of the > in the first check
+    if (first_coordinate[slice_axis_dimension] <= slice_axis_intersect &&
+          last_coordinate[slice_axis_dimension] > slice_axis_intersect) ||
+        (slice_axis_intersect == upper_limit &&
+          last_coordinate[slice_axis_dimension] == upper_limit)
+      # This element is of interest
+      new_id += 1
 
-        # Add element to new coordinates and levels
-        new_coordinates = hcat(new_coordinates, coordinates[other_dimensions, element_id])
-        push!(new_levels, levels[element_id])
+      # Add element to new coordinates and levels
+      new_coordinates = hcat(new_coordinates, coordinates[other_dimensions, element_id])
+      push!(new_levels, levels[element_id])
 
-        # Construct vandermonde matrix (or load from Dict if possible)
-        normalized_intersect =
-            (slice_axis_intersect - first_coordinate[slice_axis_dimension]) /
-            element_length * 2 - 1
+      # Construct vandermonde matrix (or load from Dict if possible)
+      normalized_intersect =
+          (slice_axis_intersect - first_coordinate[slice_axis_dimension]) /
+          element_length * 2 - 1
 
-        if haskey(vandermonde_to_2d, normalized_intersect)
-          vandermonde = vandermonde_to_2d[normalized_intersect]
-        else
-          # Generate vandermonde matrix to interpolate values at nodes_in to one value
-          vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intersect])
-          vandermonde_to_2d[normalized_intersect] = vandermonde
-        end
+      if haskey(vandermonde_to_2d, normalized_intersect)
+        vandermonde = vandermonde_to_2d[normalized_intersect]
+      else
+        # Generate vandermonde matrix to interpolate values at nodes_in to one value
+        vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intersect])
+        vandermonde_to_2d[normalized_intersect] = vandermonde
+      end
 
-        # 1D interpolation to specified slice plane
-        for i in 1:n_nodes_in
-          for ii in 1:n_nodes_in
+      # 1D interpolation to specified slice plane
+      for i in 1:n_nodes_in
+        for ii in 1:n_nodes_in
+          for v in 1:n_variables
             if slice_axis == :x
               data = unstructured_data[:, i, ii, element_id, v]
             elseif slice_axis == :y
