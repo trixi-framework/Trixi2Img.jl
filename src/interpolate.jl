@@ -67,7 +67,7 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
 
   # New unstructured data has one dimension less.
   # The redundant element ids are removed later.
-  new_unstructured_data = similar(unstructured_data[1, :, :, :, :])
+  new_unstructured_data = similar(unstructured_data[1, ..])
 
   # Declare new empty arrays to fill in new coordinates and levels
   new_coordinates = Array{Float64}(undef, 2, 0)
