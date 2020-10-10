@@ -123,17 +123,15 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
       # 1D interpolation to specified slice plane
       for i in 1:n_nodes_in
         for ii in 1:n_nodes_in
-          for v in 1:n_variables
-            if slice_axis == :x
-              data = unstructured_data[:, i, ii, element_id, v]
-            elseif slice_axis == :y
-              data = unstructured_data[i, :, ii, element_id, v]
-            elseif slice_axis == :z
-              data = unstructured_data[i, ii, :, element_id, v]
-            end
-            value = vandermonde * data
-            new_unstructured_data[i, ii, new_id, v] = value[1]
+          if slice_axis == :x
+            data = unstructured_data[:, i, ii, element_id, :]
+          elseif slice_axis == :y
+            data = unstructured_data[i, :, ii, element_id, :]
+          elseif slice_axis == :z
+            data = unstructured_data[i, ii, :, element_id, :]
           end
+          value = interpolate_nodes(permutedims(data), vandermonde, n_variables)
+          new_unstructured_data[i, ii, new_id, :] = value[:, 1]
         end
       end
     end
