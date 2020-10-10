@@ -41,7 +41,8 @@ end
 
 
 # Convert 3d unstructured data to 2d slice.
-# Additional to the new unstructured data updated coordinates and levels are returned.
+# Additional to the new unstructured data updated coordinates, levels and
+# center coordinates are returned.
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
                                levels::AbstractArray{Int}, length_level_0::Float64,
