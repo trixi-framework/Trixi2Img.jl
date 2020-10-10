@@ -42,7 +42,7 @@ end
 
 # Convert 3d unstructured data to 2d slice.
 # Additional to the new unstructured data updated coordinates, levels and
-# center coordinates are returned.
+# center coordinates and a vector [xlabel, ylabel] for plotting are returned.
 function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
                                levels::AbstractArray{Int}, length_level_0::Float64,
@@ -143,7 +143,10 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
 
   center_level_0 = center_level_0[other_dimensions]
 
-  return unstructured_data, new_coordinates, new_levels, center_level_0
+  # Extract labels for plotting
+  plot_labels = ["x", "y", "z"][other_dimensions]
+
+  return unstructured_data, new_coordinates, new_levels, center_level_0, plot_labels
 end
 
 

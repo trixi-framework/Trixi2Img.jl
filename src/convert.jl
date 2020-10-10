@@ -95,9 +95,11 @@ function trixi2img(filename::AbstractString...;
 
     if ndims == 3
       # convert 3d unstructured data to 2d slice
-      unstructured_data, coordinates, levels, center_level_0 = unstructured_2d_to_3d(
+      unstructured_data, coordinates, levels, center_level_0, plot_labels = unstructured_2d_to_3d(
           unstructured_data, coordinates, levels, length_level_0, center_level_0,
           slice_axis, slice_axis_intersect)
+    elseif ndims == 2
+      plot_labels = ["x", "y"]
     end
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
@@ -115,7 +117,7 @@ function trixi2img(filename::AbstractString...;
                                 levels, resolution, nvisnodes_per_level))
 
     # Interpolate cell-centered values to node-centered values
-    node_centered_data = cell2node(structured_data)
+    node_centered_data = permutedims(cell2node(structured_data), [2, 1, 3])
 
     # Determine axis coordinates for contour plot
     xs = collect(range(-1, 1, length=resolution+1)) .* length_level_0/2 .+ center_level_0[1]
@@ -161,7 +163,9 @@ function trixi2img(filename::AbstractString...;
       @timeit "create figure" plot(size=(2000,2000), thickness_scaling=1,
                                    aspectratio=:equal, legend=:none, title="$label (t = $time)",
                                    colorbar=true, xlims=xlims, ylims=ylims,
-                                   tickfontsize=18, titlefontsize=28)
+                                   xlabel=plot_labels[1], ylabel=plot_labels[2],
+                                   labelfontsize=18, tickfontsize=18,
+                                   titlefontsize=28)
 
       # Plot contours
       verbose && println("| | | Plotting contours...")
