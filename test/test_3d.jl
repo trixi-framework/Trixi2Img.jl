@@ -42,15 +42,17 @@ isdir(outdir) && rm(outdir, recursive=true)
     end
 
     @testset "outside negative border slice" begin
-      @test_throws ErrorException("slice_axis_intersect outside of domain") trixi2img(
+      slice_axis_intersect=-1.01
+      @test_throws ErrorException("slice_axis_intersect $slice_axis_intersect outside of domain") trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
-          slice_axis=:x, slice_axis_intersect=-1.01)
+          slice_axis=:x, slice_axis_intersect=slice_axis_intersect)
     end
 
     @testset "outside positive border slice" begin
-      @test_throws ErrorException("slice_axis_intersect outside of domain") trixi2img(
+      slice_axis_intersect=1.005
+      @test_throws ErrorException("slice_axis_intersect $slice_axis_intersect outside of domain") trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
-          slice_axis=:y, slice_axis_intersect=1.005)
+          slice_axis=:y, slice_axis_intersect=slice_axis_intersect)
     end
   end
 
