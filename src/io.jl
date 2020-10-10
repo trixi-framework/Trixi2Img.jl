@@ -82,9 +82,11 @@ function read_datafile(filename::String, ndims::Int64)
     if ndims == 3
       # Read 3d data
       data = Array{Float64}(undef, n_nodes, n_nodes, n_nodes, n_elements, n_variables)
-    else
+    elseif ndims == 2
       # Read 2d data
       data = Array{Float64}(undef, n_nodes, n_nodes, n_elements, n_variables)
+    else
+      error("unsupported number of dimensions: $ndims")
     end
     for v = 1:n_variables
       vardata = read(file["variables_$v"])

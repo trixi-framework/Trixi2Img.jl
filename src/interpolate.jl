@@ -54,7 +54,8 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
     :z => 3
   )
   if !haskey(dimensions, slice_axis)
-    error("illegal dimension")
+    supported_dims = keys(dimensions)
+    error("illegal dimension '$slice_axis', supported dimensions are $supported_dims")
   end
   slice_axis_dimension = dimensions[slice_axis]
   other_dimensions = [1, 2, 3][1:end .!= slice_axis_dimension]
@@ -84,7 +85,7 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
   upper_limit = center_level_0[slice_axis_dimension] + length_level_0 / 2
 
   if slice_axis_intersect < lower_limit || slice_axis_intersect > upper_limit
-    error("slice_axis_intersect outside of domain")
+    error("slice_axis_intersect $slice_axis_intersect outside of domain")
   end
 
   for element_id in 1:n_elements
