@@ -18,18 +18,18 @@ function read_meshfile(filename::String)
   h5open(filename, "r") do file
     # Extract basic information
     if exists(attrs(file), "ndims")
-      ndims_ = read(attrs(file)["ndims"])
+      ndims = read(attrs(file)["ndims"])
     else
-      ndims_ = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
+      ndims = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
     end
-    n_children_per_cell = 2^ndims_
+    n_children_per_cell = 2^ndims
     n_cells = read(attrs(file)["n_cells"])
     n_leaf_cells = read(attrs(file)["n_leaf_cells"])
     center_level_0 = read(attrs(file)["center_level_0"])
     length_level_0 = read(attrs(file)["length_level_0"])
 
     # Extract coordinates, levels, child cells
-    coordinates = Array{Float64}(undef, ndims_, n_cells)
+    coordinates = Array{Float64}(undef, ndims, n_cells)
     coordinates .= read(file["coordinates"])
     levels = Array{Int}(undef, n_cells)
     levels .= read(file["levels"])
@@ -52,7 +52,7 @@ function read_meshfile(filename::String)
     coordinates = coordinates[:, leaf_cells]
     levels = levels[leaf_cells]
 
-    return center_level_0, length_level_0, leaf_cells, coordinates, levels, ndims_
+    return center_level_0, length_level_0, leaf_cells, coordinates, levels, ndims
   end
 end
 

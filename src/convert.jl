@@ -66,11 +66,11 @@ function trixi2img(filename::AbstractString...;
     # Read mesh
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" (center_level_0, length_level_0,
-                         leaf_cells, coordinates, levels, ndims_) = read_meshfile(meshfile)
+                         leaf_cells, coordinates, levels, ndims) = read_meshfile(meshfile)
 
     # Read data
     verbose && println("| Reading data file...")
-    @timeit "read data" labels, unstructured_data, n_nodes, time = read_datafile(filename, ndims_)
+    @timeit "read data" labels, unstructured_data, n_nodes, time = read_datafile(filename, ndims)
 
     # Determine resolution for data interpolation
     max_level = maximum(levels)
@@ -93,7 +93,7 @@ function trixi2img(filename::AbstractString...;
     # level-0-cell) that contains the number of visualization nodes for any
     # refinement level to visualize on an equidistant grid
 
-    if ndims_ == 3
+    if ndims == 3
       # convert 3d unstructured data to 2d slice
       unstructured_data, coordinates, levels, center_level_0 = unstructured_2d_to_3d(
           unstructured_data, coordinates, levels, length_level_0, center_level_0,
