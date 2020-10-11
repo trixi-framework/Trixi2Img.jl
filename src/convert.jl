@@ -117,7 +117,7 @@ function trixi2img(filename::AbstractString...;
                                 levels, resolution, nvisnodes_per_level))
 
     # Interpolate cell-centered values to node-centered values
-    node_centered_data = permutedims(cell2node(structured_data), [2, 1, 3])
+    node_centered_data = cell2node(structured_data)
 
     # Determine axis coordinates for contour plot
     xs = collect(range(-1, 1, length=resolution+1)) .* length_level_0/2 .+ center_level_0[1]
@@ -170,7 +170,8 @@ function trixi2img(filename::AbstractString...;
       # Plot contours
       verbose && println("| | | Plotting contours...")
       @timeit "plot contours" contourf!(xs, ys, node_centered_data[:, :, variable_id],
-                                        c=:bluesreds, levels=128, linewidth=0)
+                                        c=:bluesreds, levels=128, linewidth=0,
+                                        match_dimensions=true)
 
       # Plot grid lines
       if grid_lines
