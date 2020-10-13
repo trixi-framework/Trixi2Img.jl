@@ -57,9 +57,10 @@ function read_meshfile(filename::String)
 end
 
 
-function read_datafile(filename::String, ndims::Int64)
+function read_datafile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
+    ndims = read(attrs(file)["ndims"])
     # Extract basic information
     if exists(attrs(file), "polydeg")
       polydeg = read(attrs(file)["polydeg"])

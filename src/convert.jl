@@ -75,7 +75,7 @@ function trixi2img(filename::AbstractString...;
 
     # Read data
     verbose && println("| Reading data file...")
-    @timeit "read data" labels, unstructured_data, n_nodes, time = read_datafile(filename, ndims)
+    @timeit "read data" labels, unstructured_data, n_nodes, time = read_datafile(filename)
 
     # Determine resolution for data interpolation
     max_level = maximum(levels)
@@ -99,10 +99,11 @@ function trixi2img(filename::AbstractString...;
     # refinement level to visualize on an equidistant grid
 
     if ndims == 3
+      verbose && println("| Extracting 2D slice...")
       # convert 3d unstructured data to 2d slice
-      unstructured_data, coordinates, levels, center_level_0 = unstructured_2d_to_3d(
-          unstructured_data, coordinates, levels, length_level_0, center_level_0,
-          slice_axis, slice_axis_intercept)
+      @timeit "extract 2D slice" (unstructured_data, coordinates, levels,
+          center_level_0) = unstructured_2d_to_3d(unstructured_data, coordinates,
+          levels, length_level_0, center_level_0, slice_axis, slice_axis_intercept)
     end
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
