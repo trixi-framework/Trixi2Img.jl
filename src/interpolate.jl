@@ -47,7 +47,7 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                coordinates::AbstractArray{Float64},
                                levels::AbstractArray{Int}, length_level_0::Float64,
                                center_level_0::AbstractArray{Float64},
-                               slice_axis, slice_axis_intersect)
+                               slice_axis, slice_axis_intercept)
 
   dimensions = Dict(
     :x => 1,
@@ -85,8 +85,8 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
   lower_limit = center_level_0[slice_axis_dimension] - length_level_0 / 2
   upper_limit = center_level_0[slice_axis_dimension] + length_level_0 / 2
 
-  if slice_axis_intersect < lower_limit || slice_axis_intersect > upper_limit
-    error("slice_axis_intersect $slice_axis_intersect outside of domain")
+  if slice_axis_intercept < lower_limit || slice_axis_intercept > upper_limit
+    error("slice_axis_intercept $slice_axis_intercept outside of domain")
   end
 
   for element_id in 1:n_elements
@@ -95,11 +95,11 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
     first_coordinate = coordinates[:, element_id] .- element_length / 2
     last_coordinate = coordinates[:, element_id] .+ element_length / 2
 
-    # Check if slice plane and current element intersect
+    # Check if slice plane and current element intercept
     # The upper limit check is needed because of the > in the first check
-    if (first_coordinate[slice_axis_dimension] <= slice_axis_intersect &&
-          last_coordinate[slice_axis_dimension] > slice_axis_intersect) ||
-        (slice_axis_intersect == upper_limit &&
+    if (first_coordinate[slice_axis_dimension] <= slice_axis_intercept &&
+          last_coordinate[slice_axis_dimension] > slice_axis_intercept) ||
+        (slice_axis_intercept == upper_limit &&
           last_coordinate[slice_axis_dimension] == upper_limit)
       # This element is of interest
       new_id += 1
@@ -109,16 +109,16 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
       push!(new_levels, levels[element_id])
 
       # Construct vandermonde matrix (or load from Dict if possible)
-      normalized_intersect =
-          (slice_axis_intersect - first_coordinate[slice_axis_dimension]) /
+      normalized_intercept =
+          (slice_axis_intercept - first_coordinate[slice_axis_dimension]) /
           element_length * 2 - 1
 
-      if haskey(vandermonde_to_2d, normalized_intersect)
-        vandermonde = vandermonde_to_2d[normalized_intersect]
+      if haskey(vandermonde_to_2d, normalized_intercept)
+        vandermonde = vandermonde_to_2d[normalized_intercept]
       else
         # Generate vandermonde matrix to interpolate values at nodes_in to one value
-        vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intersect])
-        vandermonde_to_2d[normalized_intersect] = vandermonde
+        vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intercept])
+        vandermonde_to_2d[normalized_intercept] = vandermonde
       end
 
       # 1D interpolation to specified slice plane

@@ -18,17 +18,22 @@ Convert two-dimensional Trixi-generated output files to image files (PNG or PDF)
 - `nvisnodes`: Number of visualization nodes per element (default: twice the number of DG nodes).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `max_supported_level`: Maximum cell refinement level supported for plotting.
+- `slice_axis`: Axis orthogonal to the slice plane. Will be ignored in 2D. May be :x, :y or :z.
+- `slice_axis_intercept`: Point on the slice axis where it intersects with the slice plane.
 
 # Examples
 ```julia
 julia> trixi2img("out/solution_000*.h5")
+[...]
+
+julia> trixi2img("out/solution_000*.h5", slice_axis=:z, slice_axis_intercept=0.5) # Slice plane will be z=0.5
 [...]
 ```
 """
 function trixi2img(filename::AbstractString...;
                    format=:png, variables=[], verbose=false, grid_lines=false,
                    output_directory=".", nvisnodes=nothing, max_supported_level=11,
-                   slice_axis=:x, slice_axis_intersect=0)
+                   slice_axis=:z, slice_axis_intercept=0)
   # Reset timer
   reset_timer!()
 
@@ -97,7 +102,7 @@ function trixi2img(filename::AbstractString...;
       # convert 3d unstructured data to 2d slice
       unstructured_data, coordinates, levels, center_level_0 = unstructured_2d_to_3d(
           unstructured_data, coordinates, levels, length_level_0, center_level_0,
-          slice_axis, slice_axis_intersect)
+          slice_axis, slice_axis_intercept)
     end
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
