@@ -43,14 +43,18 @@ isdir(outdir) && rm(outdir, recursive=true)
 
     @testset "outside negative border slice" begin
       slice_axis_intercept=-1.01
-      @test_throws ErrorException("slice_axis_intercept $slice_axis_intercept outside of domain") trixi2img(
+      @test_throws ErrorException(string(
+          "Slice plane $slice_axis = $slice_axis_intercept outside of domain. ",
+          "$slice_axis must be between $lower_limit and $upper_limit")) trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
           slice_axis=:x, slice_axis_intercept=slice_axis_intercept)
     end
 
     @testset "outside positive border slice" begin
       slice_axis_intercept=1.005
-      @test_throws ErrorException("slice_axis_intercept $slice_axis_intercept outside of domain") trixi2img(
+      @test_throws ErrorException(string(
+          "Slice plane $slice_axis = $slice_axis_intercept outside of domain. ",
+          "$slice_axis must be between $lower_limit and $upper_limit")) trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
           slice_axis=:y, slice_axis_intercept=slice_axis_intercept)
     end
