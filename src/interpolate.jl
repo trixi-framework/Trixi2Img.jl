@@ -49,17 +49,18 @@ function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
                                center_level_0::AbstractArray{Float64},
                                slice_axis, slice_axis_intercept)
 
-  dimensions = Dict(
-    :x => 1,
-    :y => 2,
-    :z => 3
-  )
-  if !haskey(dimensions, slice_axis)
-    supported_dims = keys(dimensions)
-    error("illegal dimension '$slice_axis', supported dimensions are $supported_dims")
+  if slice_axis === :x
+    slice_axis_dimension = 1
+    other_dimensions = [2, 3]
+  elseif slice_axis === :y
+    slice_axis_dimension = 2
+    other_dimensions = [1, 3]
+  elseif slice_axis === :z
+    slice_axis_dimension = 3
+    other_dimensions = [1, 2]
+  else
+    error("illegal dimension '$slice_axis', supported dimensions are :x, :y, and :z")
   end
-  slice_axis_dimension = dimensions[slice_axis]
-  other_dimensions = [1, 2, 3][1:end .!= slice_axis_dimension]
 
   # Limits of domain in slice_axis dimension
   lower_limit = center_level_0[slice_axis_dimension] - length_level_0 / 2
