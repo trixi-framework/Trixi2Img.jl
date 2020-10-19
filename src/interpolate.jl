@@ -89,6 +89,15 @@ function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
   # Save vandermonde matrices in a Dict to prevent redundant generation
   vandermonde_to_2d = Dict()
 
+  # Permute dimensions such that the slice axis dimension is always the
+  # third dimension of the array. Below we can always interpolate in the 
+  # third dimension.
+  if slice_axis === :x
+    unstructured_data = permutedims(unstructured_data, [2, 3, 1, 4, 5])
+  elseif slice_axis === :y
+    unstructured_data = permutedims(unstructured_data, [1, 3, 2, 4, 5])
+  end
+
   for element_id in 1:n_elements
     # Distance from center to border of this element (half the length)
     element_length = length_level_0 / 2^levels[element_id]
@@ -129,15 +138,13 @@ function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
     end
 
     # 1D interpolation to specified slice plane
+    # We permuted the dimensions above such that now the dimension in which
+    # we will interpolate is always the third one.
     for i in 1:n_nodes_in
       for ii in 1:n_nodes_in
-        if slice_axis == :x
-          data = unstructured_data[:, i, ii, element_id, :]
-        elseif slice_axis == :y
-          data = unstructured_data[i, :, ii, element_id, :]
-        elseif slice_axis == :z
-          data = unstructured_data[i, ii, :, element_id, :]
-        end
+        # Interpolate in the third dimension
+        data = unstructured_data[i, ii, :, element_id, :]
+    
         value = interpolate_nodes(permutedims(data), vandermonde, n_variables)
         new_unstructured_data[i, ii, new_id, :] = value[:, 1]
       end
