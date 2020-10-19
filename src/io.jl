@@ -91,7 +91,7 @@ function read_datafile(filename::String)
     end
     for v = 1:n_variables
       vardata = read(file["variables_$v"])
-      @views data[.., v][:] .= vardata
+      @views data[.., :, v][:] .= vardata
     end
 
     return labels, data, n_nodes, time

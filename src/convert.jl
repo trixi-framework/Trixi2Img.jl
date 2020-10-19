@@ -84,7 +84,7 @@ function trixi2img(filename::AbstractString...;
             "maximum supported level $max_supported_level")
     end
     max_available_nodes_per_finest_element = 2^(max_supported_level - max_level)
-    if nvisnodes == nothing
+    if nvisnodes === nothing
       max_nvisnodes = 2 * n_nodes
     elseif nvisnodes == 0
       max_nvisnodes = n_nodes

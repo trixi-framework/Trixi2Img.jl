@@ -43,11 +43,9 @@ end
 # Convert 3d unstructured data to 2d slice.
 # Additional to the new unstructured data updated coordinates, levels and
 # center coordinates are returned.
-function unstructured_2d_to_3d(unstructured_data::AbstractArray{Float64},
-                               coordinates::AbstractArray{Float64},
-                               levels::AbstractArray{Int}, length_level_0::Float64,
-                               center_level_0::AbstractArray{Float64},
-                               slice_axis, slice_axis_intercept)
+function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
+                               length_level_0, center_level_0, slice_axis,
+                               slice_axis_intercept)
 
   if slice_axis === :x
     slice_axis_dimension = 1
@@ -158,24 +156,13 @@ end
 
 
 # Interpolate unstructured DG data to structured data (cell-centered)
-function unstructured2structured(unstructured_data::AbstractArray{Float64},
-                                 normalized_coordinates::AbstractArray{Float64},
-                                 levels::AbstractArray{Int}, resolution::Int,
-                                 nvisnodes_per_level::AbstractArray{Int})
+function unstructured2structured(unstructured_data, normalized_coordinates,
+                                 levels, resolution, nvisnodes_per_level)
   # Extract data shape information
   n_nodes_in, _, n_elements, n_variables = size(unstructured_data)
 
   # Get node coordinates for DG locations on reference element
   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
-
-  #=# Calculate node coordinates for structured locations on reference element=#
-  #=max_level = length(nvisnodes_per_level) - 1=#
-  #=visnodes_per_level = []=#
-  #=for l in 0:max_level=#
-  #=  n_nodes_out = nvisnodes_per_level[l + 1]=#
-  #=  dx = 2 / n_nodes_out=#
-  #=  push!(visnodes_per_level, collect(range(-1 + dx/2, 1 - dx/2, length=n_nodes_out)))=#
-  #=end=#
 
   # Calculate interpolation vandermonde matrices for each level
   max_level = length(nvisnodes_per_level) - 1
