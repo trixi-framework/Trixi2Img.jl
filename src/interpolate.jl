@@ -158,10 +158,7 @@ function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
 
   center_level_0 = center_level_0[other_dimensions]
 
-  # Extract labels for plotting
-  plot_labels = ["x", "y", "z"][other_dimensions]
-
-  return unstructured_data, new_coordinates, new_levels, center_level_0, plot_labels
+  return unstructured_data, new_coordinates, new_levels, center_level_0
 end
 
 
