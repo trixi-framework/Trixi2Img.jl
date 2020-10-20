@@ -1,5 +1,3 @@
-using EllipsisNotation
-
 # Use data file to extract mesh filename from attributes
 function extract_mesh_filename(filename::String)
   # Open file for reading
