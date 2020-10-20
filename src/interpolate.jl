@@ -42,7 +42,7 @@ end
 
 # Convert 3d unstructured data to 2d slice.
 # Additional to the new unstructured data updated coordinates, levels and
-# center coordinates and a vector [xlabel, ylabel] for plotting are returned.
+# center coordinates are returned.
 function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
                                length_level_0, center_level_0, slice_axis,
                                slice_axis_intercept)
