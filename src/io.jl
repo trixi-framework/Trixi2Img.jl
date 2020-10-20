@@ -1,5 +1,3 @@
-using EllipsisNotation
-
 # Use data file to extract mesh filename from attributes
 function extract_mesh_filename(filename::String)
   # Open file for reading
@@ -57,9 +55,10 @@ function read_meshfile(filename::String)
 end
 
 
-function read_datafile(filename::String, ndims::Int64)
+function read_datafile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
+    ndims = read(attrs(file)["ndims"])
     # Extract basic information
     if exists(attrs(file), "polydeg")
       polydeg = read(attrs(file)["polydeg"])
@@ -90,7 +89,7 @@ function read_datafile(filename::String, ndims::Int64)
     end
     for v = 1:n_variables
       vardata = read(file["variables_$v"])
-      @views data[.., v][:] .= vardata
+      @views data[.., :, v][:] .= vardata
     end
 
     return labels, data, n_nodes, time

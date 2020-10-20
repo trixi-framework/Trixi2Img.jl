@@ -1,6 +1,7 @@
 module Trixi2Img
 
 # Include other packages
+using EllipsisNotation
 using Glob: glob
 using HDF5: h5open, attrs, exists
 using Plots: plot, plot!, gr, savefig, contourf!

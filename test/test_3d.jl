@@ -22,37 +22,43 @@ isdir(outdir) && rm(outdir, recursive=true)
     end
 
     @testset "x-axis slice" begin
-      test_trixi2img("solution_000000.h5", outdir, slice_axis=:x, slice_axis_intersect=0.6)
+      test_trixi2img("solution_000000.h5", outdir, slice_axis=:x, slice_axis_intercept=0.6)
     end
 
     @testset "y-axis slice" begin
-      test_trixi2img("solution_000000.h5", outdir, slice_axis=:y, slice_axis_intersect=-0.35)
+      test_trixi2img("solution_000000.h5", outdir, slice_axis=:y, slice_axis_intercept=-0.35)
     end
 
     @testset "z-axis slice" begin
-      test_trixi2img("solution_000000.h5", outdir, slice_axis=:z, slice_axis_intersect=-0.89)
+      test_trixi2img("solution_000000.h5", outdir, slice_axis=:z, slice_axis_intercept=-0.89)
     end
 
     @testset "negative border slice" begin
-      test_trixi2img("solution_000000.h5", outdir, slice_axis=:y, slice_axis_intersect=-1)
+      test_trixi2img("solution_000000.h5", outdir, slice_axis=:y, slice_axis_intercept=-1)
     end
 
     @testset "positive border slice" begin
-      test_trixi2img("solution_000000.h5", outdir, slice_axis=:z, slice_axis_intersect=1)
+      test_trixi2img("solution_000000.h5", outdir, slice_axis=:z, slice_axis_intercept=1)
     end
 
     @testset "outside negative border slice" begin
-      slice_axis_intersect=-1.01
-      @test_throws ErrorException("slice_axis_intersect $slice_axis_intersect outside of domain") trixi2img(
+      slice_axis_intercept=-1.01
+      slice_axis=:x
+      @test_throws ErrorException(string(
+          "Slice plane $slice_axis = $slice_axis_intercept outside of domain. ",
+          "$slice_axis must be between -1.0 and 1.0")) trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
-          slice_axis=:x, slice_axis_intersect=slice_axis_intersect)
+          slice_axis=slice_axis, slice_axis_intercept=slice_axis_intercept)
     end
 
     @testset "outside positive border slice" begin
-      slice_axis_intersect=1.005
-      @test_throws ErrorException("slice_axis_intersect $slice_axis_intersect outside of domain") trixi2img(
+      slice_axis_intercept=1.005
+      slice_axis=:y
+      @test_throws ErrorException(string(
+          "Slice plane $slice_axis = $slice_axis_intercept outside of domain. ",
+          "$slice_axis must be between -1.0 and 1.0")) trixi2img(
           joinpath(outdir, "solution_000000.h5"); output_directory=outdir,
-          slice_axis=:y, slice_axis_intersect=slice_axis_intersect)
+          slice_axis=slice_axis, slice_axis_intercept=slice_axis_intercept)
     end
   end
 
