@@ -102,8 +102,9 @@ function trixi2img(filename::AbstractString...;
       verbose && println("| Extracting 2D slice...")
       # convert 3d unstructured data to 2d slice
       @timeit "extract 2D slice" (unstructured_data, coordinates, levels,
-          center_level_0) = unstructured_2d_to_3d(unstructured_data, coordinates,
-          levels, length_level_0, center_level_0, slice_axis, slice_axis_intercept)
+          center_level_0) = unstructured_2d_to_3d(unstructured_data,
+          coordinates, levels, length_level_0, center_level_0, slice_axis,
+          slice_axis_intercept)
     end
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
@@ -162,17 +163,40 @@ function trixi2img(filename::AbstractString...;
     @timeit "plot generation" for (variable_id, label) in enumerate(variables)
       verbose && println("| | Variable $label...")
 
+      if ndims == 3
+        # Extract plot labels
+        if slice_axis === :x
+          xlabel = "y"
+          ylabel = "z"
+        elseif slice_axis === :y
+          xlabel = "x"
+          ylabel = "z"
+        elseif slice_axis === :z
+          xlabel = "x"
+          ylabel = "y"
+        else
+          error("illegal dimension '$slice_axis', supported dimensions are :x, :y, and :z")
+        end
+      elseif ndims == 2
+        xlabel = "x"
+        ylabel = "y"
+      end
+      
+
       # Create plot
       verbose && println("| | | Creating figure...")
       @timeit "create figure" plot(size=(2000,2000), thickness_scaling=1,
                                    aspectratio=:equal, legend=:none, title="$label (t = $time)",
                                    colorbar=true, xlims=xlims, ylims=ylims,
-                                   tickfontsize=18, titlefontsize=28)
+                                   xlabel=xlabel, ylabel=ylabel,
+                                   labelfontsize=18, tickfontsize=18,
+                                   titlefontsize=28)
 
       # Plot contours
       verbose && println("| | | Plotting contours...")
       @timeit "plot contours" contourf!(xs, ys, node_centered_data[:, :, variable_id],
-                                        c=:bluesreds, levels=128, linewidth=0)
+                                        c=:bluesreds, levels=128, linewidth=0,
+                                        match_dimensions=true)
 
       # Plot grid lines
       if grid_lines
