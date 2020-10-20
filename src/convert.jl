@@ -18,16 +18,22 @@ Convert two-dimensional Trixi-generated output files to image files (PNG or PDF)
 - `nvisnodes`: Number of visualization nodes per element (default: twice the number of DG nodes).
                A value of `0` (zero) uses the number of nodes in the DG elements.
 - `max_supported_level`: Maximum cell refinement level supported for plotting.
+- `slice_axis`: Axis orthogonal to the slice plane. Will be ignored in 2D. May be :x, :y or :z.
+- `slice_axis_intercept`: Point on the slice axis where it intersects with the slice plane.
 
 # Examples
 ```julia
 julia> trixi2img("out/solution_000*.h5")
 [...]
+
+julia> trixi2img("out/solution_000*.h5", slice_axis=:z, slice_axis_intercept=0.5) # Slice plane will be z=0.5
+[...]
 ```
 """
 function trixi2img(filename::AbstractString...;
                    format=:png, variables=[], verbose=false, grid_lines=false,
-                   output_directory=".", nvisnodes=nothing, max_supported_level=11)
+                   output_directory=".", nvisnodes=nothing, max_supported_level=11,
+                   slice_axis=:z, slice_axis_intercept=0)
   # Reset timer
   reset_timer!()
 
@@ -65,7 +71,7 @@ function trixi2img(filename::AbstractString...;
     # Read mesh
     verbose && println("| Reading mesh file...")
     @timeit "read mesh" (center_level_0, length_level_0,
-                         leaf_cells, coordinates, levels) = read_meshfile(meshfile)
+                         leaf_cells, coordinates, levels, ndims) = read_meshfile(meshfile)
 
     # Read data
     verbose && println("| Reading data file...")
@@ -78,7 +84,7 @@ function trixi2img(filename::AbstractString...;
             "maximum supported level $max_supported_level")
     end
     max_available_nodes_per_finest_element = 2^(max_supported_level - max_level)
-    if nvisnodes == nothing
+    if nvisnodes === nothing
       max_nvisnodes = 2 * n_nodes
     elseif nvisnodes == 0
       max_nvisnodes = n_nodes
@@ -91,6 +97,14 @@ function trixi2img(filename::AbstractString...;
     # nvisnodes_per_level is an array (accessed by "level + 1" to accommodate
     # level-0-cell) that contains the number of visualization nodes for any
     # refinement level to visualize on an equidistant grid
+
+    if ndims == 3
+      verbose && println("| Extracting 2D slice...")
+      # convert 3d unstructured data to 2d slice
+      @timeit "extract 2D slice" (unstructured_data, coordinates, levels,
+          center_level_0) = unstructured_2d_to_3d(unstructured_data, coordinates,
+          levels, length_level_0, center_level_0, slice_axis, slice_axis_intercept)
+    end
 
     # Normalize element coordinates: move center to (0, 0) and domain size to [-1, 1]²
     n_elements = length(levels)
@@ -180,4 +194,3 @@ function trixi2img(filename::AbstractString...;
   print_timer()
   println()
 end
-

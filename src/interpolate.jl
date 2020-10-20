@@ -40,25 +40,136 @@ function cell2node(cell_centered_data::AbstractArray{Float64})
 end
 
 
+# Convert 3d unstructured data to 2d slice.
+# Additional to the new unstructured data updated coordinates, levels and
+# center coordinates are returned.
+function unstructured_2d_to_3d(unstructured_data, coordinates, levels,
+                               length_level_0, center_level_0, slice_axis,
+                               slice_axis_intercept)
+
+  if slice_axis === :x
+    slice_axis_dimension = 1
+    other_dimensions = [2, 3]
+  elseif slice_axis === :y
+    slice_axis_dimension = 2
+    other_dimensions = [1, 3]
+  elseif slice_axis === :z
+    slice_axis_dimension = 3
+    other_dimensions = [1, 2]
+  else
+    error("illegal dimension '$slice_axis', supported dimensions are :x, :y, and :z")
+  end
+
+  # Limits of domain in slice_axis dimension
+  lower_limit = center_level_0[slice_axis_dimension] - length_level_0 / 2
+  upper_limit = center_level_0[slice_axis_dimension] + length_level_0 / 2
+
+  if slice_axis_intercept < lower_limit || slice_axis_intercept > upper_limit
+    error(string("Slice plane $slice_axis = $slice_axis_intercept outside of domain. ",
+        "$slice_axis must be between $lower_limit and $upper_limit"))
+  end
+
+  # Extract data shape information
+  n_nodes_in, _, _, n_elements, n_variables = size(unstructured_data)
+
+  # Get node coordinates for DG locations on reference element
+  nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
+
+  # New unstructured data has one dimension less.
+  # The redundant element ids are removed later.
+  @views new_unstructured_data = similar(unstructured_data[1, ..])
+
+  # Declare new empty arrays to fill in new coordinates and levels
+  new_coordinates = Array{Float64}(undef, 2, n_elements)
+  new_levels = Array{eltype(levels)}(undef, n_elements)
+
+  # Counter for new element ids
+  new_id = 0
+
+  # Save vandermonde matrices in a Dict to prevent redundant generation
+  vandermonde_to_2d = Dict()
+
+  # Permute dimensions such that the slice axis dimension is always the
+  # third dimension of the array. Below we can always interpolate in the 
+  # third dimension.
+  if slice_axis === :x
+    unstructured_data = permutedims(unstructured_data, [2, 3, 1, 4, 5])
+  elseif slice_axis === :y
+    unstructured_data = permutedims(unstructured_data, [1, 3, 2, 4, 5])
+  end
+
+  for element_id in 1:n_elements
+    # Distance from center to border of this element (half the length)
+    element_length = length_level_0 / 2^levels[element_id]
+    min_coordinate = coordinates[:, element_id] .- element_length / 2
+    max_coordinate = coordinates[:, element_id] .+ element_length / 2
+
+    # Check if slice plane and current element intersect.
+    # The first check uses a "greater but not equal" to only match one cell if the
+    # slice plane lies between two cells.
+    # The second check is needed if the slice plane is at the upper border of
+    # the domain due to this.
+    if !((min_coordinate[slice_axis_dimension] <= slice_axis_intercept &&
+          max_coordinate[slice_axis_dimension] > slice_axis_intercept) ||
+        (slice_axis_intercept == upper_limit &&
+          max_coordinate[slice_axis_dimension] == upper_limit))
+      # Continue for loop if they don't intersect
+      continue
+    end
+
+    # This element is of interest
+    new_id += 1
+
+    # Add element to new coordinates and levels
+    new_coordinates[:, new_id] = coordinates[other_dimensions, element_id]
+    new_levels[new_id] = levels[element_id]
+
+    # Construct vandermonde matrix (or load from Dict if possible)
+    normalized_intercept =
+        (slice_axis_intercept - min_coordinate[slice_axis_dimension]) /
+        element_length * 2 - 1
+
+    if haskey(vandermonde_to_2d, normalized_intercept)
+      vandermonde = vandermonde_to_2d[normalized_intercept]
+    else
+      # Generate vandermonde matrix to interpolate values at nodes_in to one value
+      vandermonde = polynomial_interpolation_matrix(nodes_in, [normalized_intercept])
+      vandermonde_to_2d[normalized_intercept] = vandermonde
+    end
+
+    # 1D interpolation to specified slice plane
+    # We permuted the dimensions above such that now the dimension in which
+    # we will interpolate is always the third one.
+    for i in 1:n_nodes_in
+      for ii in 1:n_nodes_in
+        # Interpolate in the third dimension
+        data = unstructured_data[i, ii, :, element_id, :]
+    
+        value = interpolate_nodes(permutedims(data), vandermonde, n_variables)
+        new_unstructured_data[i, ii, new_id, :] = value[:, 1]
+      end
+    end
+  end
+
+  # Remove redundant element ids
+  unstructured_data = new_unstructured_data[:, :, 1:new_id, :]
+  new_coordinates = new_coordinates[:, 1:new_id]
+  new_levels = new_levels[1:new_id]
+
+  center_level_0 = center_level_0[other_dimensions]
+
+  return unstructured_data, new_coordinates, new_levels, center_level_0
+end
+
+
 # Interpolate unstructured DG data to structured data (cell-centered)
-function unstructured2structured(unstructured_data::AbstractArray{Float64},
-                                 normalized_coordinates::AbstractArray{Float64},
-                                 levels::AbstractArray{Int}, resolution::Int,
-                                 nvisnodes_per_level::AbstractArray{Int})
+function unstructured2structured(unstructured_data, normalized_coordinates,
+                                 levels, resolution, nvisnodes_per_level)
   # Extract data shape information
   n_nodes_in, _, n_elements, n_variables = size(unstructured_data)
 
   # Get node coordinates for DG locations on reference element
   nodes_in, _ = gauss_lobatto_nodes_weights(n_nodes_in)
-
-  #=# Calculate node coordinates for structured locations on reference element=#
-  #=max_level = length(nvisnodes_per_level) - 1=#
-  #=visnodes_per_level = []=#
-  #=for l in 0:max_level=#
-  #=  n_nodes_out = nvisnodes_per_level[l + 1]=#
-  #=  dx = 2 / n_nodes_out=#
-  #=  push!(visnodes_per_level, collect(range(-1 + dx/2, 1 - dx/2, length=n_nodes_out)))=#
-  #=end=#
 
   # Calculate interpolation vandermonde matrices for each level
   max_level = length(nvisnodes_per_level) - 1
@@ -241,4 +352,3 @@ function calc_vertices(coordinates::AbstractArray{Float64, 2},
 
   return x, y
 end
-
