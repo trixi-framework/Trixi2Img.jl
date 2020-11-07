@@ -6,7 +6,7 @@
 [![Codecov](https://codecov.io/gh/trixi-framework/Trixi2Img.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/trixi-framework/Trixi2Img.jl)
 [![Coveralls](https://coveralls.io/repos/github/trixi-framework/Trixi2Img.jl/badge.svg?branch=master)](https://coveralls.io/github/trixi-framework/Trixi2Img.jl?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Img.jl/v0.2.0.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Img.jl)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Img.jl/v0.2.1.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Img.jl)
 
 **Trixi2Img.jl** can create PDF/PNG files from output files created by
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
