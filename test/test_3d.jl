@@ -11,7 +11,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
 
 @testset "3D" begin
-  run_trixi(joinpath("3d", "parameters.toml"), n_steps_max=1)
+  run_trixi(joinpath("3d", "elixir_advection_extended.jl"), maxiters=1)
 
   @testset "uniform mesh as PNG" begin
     @testset "default slice" begin
