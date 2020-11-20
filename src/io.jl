@@ -3,7 +3,7 @@ function extract_mesh_filename(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract filename relative to data file
-    mesh_file = read(attrs(file)["mesh_file"])
+    mesh_file = read(attributes(file)["mesh_file"])
 
     return joinpath(dirname(filename), mesh_file)
   end
@@ -15,16 +15,16 @@ function read_meshfile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    if exists(attrs(file), "ndims")
-      ndims = read(attrs(file)["ndims"])
+    if exists(attributes(file), "ndims")
+      ndims = read(attributes(file)["ndims"])
     else
-      ndims = read(attrs(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
+      ndims = read(attributes(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
     end
     n_children_per_cell = 2^ndims
-    n_cells = read(attrs(file)["n_cells"])
-    n_leaf_cells = read(attrs(file)["n_leaf_cells"])
-    center_level_0 = read(attrs(file)["center_level_0"])
-    length_level_0 = read(attrs(file)["length_level_0"])
+    n_cells = read(attributes(file)["n_cells"])
+    n_leaf_cells = read(attributes(file)["n_leaf_cells"])
+    center_level_0 = read(attributes(file)["center_level_0"])
+    length_level_0 = read(attributes(file)["length_level_0"])
 
     # Extract coordinates, levels, child cells
     coordinates = Array{Float64}(undef, ndims, n_cells)
@@ -58,21 +58,21 @@ end
 function read_datafile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
-    ndims = read(attrs(file)["ndims"])
+    ndims = read(attributes(file)["ndims"])
     # Extract basic information
-    if exists(attrs(file), "polydeg")
-      polydeg = read(attrs(file)["polydeg"])
+    if exists(attributes(file), "polydeg")
+      polydeg = read(attributes(file)["polydeg"])
     else
-      polydeg = read(attrs(file)["N"])
+      polydeg = read(attributes(file)["N"])
     end
-    n_elements = read(attrs(file)["n_elements"])
-    n_variables = read(attrs(file)["n_vars"])
-    time = read(attrs(file)["time"])
+    n_elements = read(attributes(file)["n_elements"])
+    n_variables = read(attributes(file)["n_vars"])
+    time = read(attributes(file)["time"])
 
     # Extract labels for legend
     labels = Array{String}(undef, 1, n_variables)
     for v = 1:n_variables
-      labels[1, v] = read(attrs(file["variables_$v"])["name"])
+      labels[1, v] = read(attributes(file["variables_$v"])["name"])
     end
 
     # Extract data arrays
