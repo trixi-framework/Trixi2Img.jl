@@ -11,7 +11,7 @@ isdir(outdir) && rm(outdir, recursive=true)
 
 
 @testset "2D" begin
-  run_trixi(joinpath("2d", "elixir_advection_basic.jl"), n_steps_max=1)
+  run_trixi(joinpath("2d", "elixir_advection_extended.jl"), maxiters=1)
 
   @testset "uniform mesh as PNG" begin
     test_trixi2img("solution_000000.h5", outdir)
