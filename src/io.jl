@@ -15,7 +15,7 @@ function read_meshfile(filename::String)
   # Open file for reading
   h5open(filename, "r") do file
     # Extract basic information
-    if exists(attributes(file), "ndims")
+    if haskey(attributes(file), "ndims")
       ndims = read(attributes(file)["ndims"])
     else
       ndims = read(attributes(file)["ndim"]) # FIXME once Trixi's 3D branch is merged & released
@@ -60,7 +60,7 @@ function read_datafile(filename::String)
   h5open(filename, "r") do file
     ndims = read(attributes(file)["ndims"])
     # Extract basic information
-    if exists(attributes(file), "polydeg")
+    if haskey(attributes(file), "polydeg")
       polydeg = read(attributes(file)["polydeg"])
     else
       polydeg = read(attributes(file)["N"])
