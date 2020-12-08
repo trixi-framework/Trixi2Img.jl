@@ -2,18 +2,25 @@ using RecipesBase
 using DiffEqBase
 import .Trixi
 
-struct TrixiPlot{SolutionT, SemidiscretizationT<:Trixi.AbstractSemidiscretization}
+struct TrixiPlot{RealT, SolutionT, SemidiscretizationT<:Trixi.AbstractSemidiscretization}
   u::SolutionT
   semi::SemidiscretizationT
+  time::RealT
 end
 
-TrixiPlot(u, prob::ODEProblem) = TrixiPlot(Trixi.wrap_array(u, prob.p), prob.p)
-TrixiPlot(sol::ODESolution) = TrixiPlot(Trixi.wrap_array(sol.u[end], sol.prob.p), sol.prob.p)
-TrixiPlot(u, sol::ODESolution) = TrixiPlot(Trixi.wrap_array(u, sol.prob.p), sol.prob.p)
+TrixiPlot(u, prob::ODEProblem, time=NaN) = TrixiPlot(Trixi.wrap_array(u, prob.p), prob.p, time)
+TrixiPlot(u, sol::ODESolution, time=NaN) = TrixiPlot(Trixi.wrap_array(u, sol.prob.p), sol.prob.p, time)
+TrixiPlot(sol::ODESolution) = TrixiPlot(Trixi.wrap_array(sol.u[end], sol.prob.p), sol.prob.p, sol.t[end])
 TrixiPlot(u, ::Trixi.SemidiscretizationEulerGravity) = error("not implemented")
 
-@recipe function f(tp::TrixiPlot)
-  mesh, equations, solver, cache = Trixi.mesh_equations_solver_cache(semi)
+function Base.show(io::IO, tp::TrixiPlot)
+  print(io, "TrixiPlot(...)")
+end
+
+@recipe function f(tp::TrixiPlot; grid_lines=false, max_supported_level=11, nvisnodes=nothing,
+                                  slice_axis=:z, slice_axis_intercept=0)
+  # Extract basic information from solution
+  mesh, equations, solver, cache = Trixi.mesh_equations_solver_cache(tp.semi)
 
   center_level_0 = mesh.tree.center_level_0
   length_level_0 = mesh.tree.length_level_0
@@ -35,34 +42,34 @@ TrixiPlot(u, ::Trixi.SemidiscretizationEulerGravity) = error("not implemented")
   else
     error("unsupported number of dimensions: $ndims")
   end
-  for variable in eachvariables(equations)
+  for variable in Trixi.eachvariable(equations)
     @views data[.., :, variable] .= tp.u[variable, .., :]
   end
   n_nodes = Trixi.nnodes(solver)
   time = 0.0
 
   # Calculate x and y limits
-  xlims_ = (-1, 1) .* (length_level_0/2 + center_level_0[1])
-  ylims_ = (-1, 1) .* (length_level_0/2 + center_level_0[2])
+  xlims = (-1, 1) .* (length_level_0/2 + center_level_0[1])
+  ylims = (-1, 1) .* (length_level_0/2 + center_level_0[2])
 
   # Determine axis labels
   if ndims == 3
     # Extract plot labels
     if slice_axis === :x
-      xlabel_ = "y"
-      ylabel_ = "z"
+      xlabel = "y"
+      ylabel = "z"
     elseif slice_axis === :y
-      xlabel_ = "x"
-      ylabel_ = "z"
+      xlabel = "x"
+      ylabel = "z"
     elseif slice_axis === :z
-      xlabel_ = "x"
-      ylabel_ = "y"
+      xlabel = "x"
+      ylabel = "y"
     else
       error("illegal dimension '$slice_axis', supported dimensions are :x, :y, and :z")
     end
   elseif ndims == 2
-    xlabel_ = "x"
-    ylabel_ = "y"
+    xlabel = "x"
+    ylabel = "y"
   end
 
   # Create plot
@@ -83,29 +90,25 @@ TrixiPlot(u, ::Trixi.SemidiscretizationEulerGravity) = error("not implemented")
   # end
 
   # Create actual plot series and set attributes
-  size --> ((2000, 2000))
-  thickness_scaling --> 1
-  aspectratio --> :equal
-  legend --> :none
-  title --> "$(labels[1,1])"
-  colorbar --> true
-  xlims --> xlims_
-  ylims --> ylims_
-  xlabel --> xlabel_
-  ylabel --> ylabel_
-  labelfontsize --> 18
-  tickfontsize --> 18
-  titlefontsize --> 28
+  # size --> ((2000, 2000))
+  # thickness_scaling --> 1
+  aspect_ratio --> :equal
+  # match_dimensions --> true
+  # legend --> :none
+  # colorbar --> true
+  title --> labels[1,1]
+  xlims --> xlims
+  ylims --> ylims
+  xguide --> xlabel
+  yguide --> ylabel
 
   seriestype --> :contour
   fill --> true
-  c --> :bluesreds
-  levels --> 128
-  linewidth --> 0
-  match_dimensions --> true
+  # seriescolor --> :bluesreds
+  # linewidth --> 0
 
   get_contour_data(center_level_0, length_level_0, leaf_cells, coordinates, levels, ndims, labels,
-                   unstructured_data, n_nodes, time)
+                   data, n_nodes, time)
 end
 
 
@@ -202,5 +205,5 @@ function get_contour_data(center_level_0, length_level_0, leaf_cells, coordinate
   # if grid_lines
   #   plot!(vertices_x, vertices_y, linecolor=:black, linewidth=1, grid=false)
   # end
-  return xs, ys, node_centered_data[:, :, variable_id]
+  return xs, ys, transpose(node_centered_data[:, :, variable_id])
 end
