@@ -5,6 +5,7 @@ using EllipsisNotation
 using Glob: glob
 using HDF5: h5open, attributes, haskey
 using Plots: plot, plot!, gr, savefig, contourf!
+using Requires
 using TimerOutputs
 import GR
 
@@ -23,6 +24,11 @@ include("io.jl")
 
 # Include top-level conversion method
 include("convert.jl")
+
+# Add plot recipes based on availability of the Trixi package
+function __init__()
+  @require Trixi="a7f1ee26-1774-49b1-8366-f1abc58fbfcb" include("plot_recipes.jl")
+end
 
 # export types/functions that define the public API of Trixi2Img
 export trixi2img
