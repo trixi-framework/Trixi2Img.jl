@@ -6,6 +6,7 @@ using Glob: glob
 using HDF5: h5open, attributes, haskey
 using Plots: plot, plot!, gr, savefig, contourf!
 using Requires
+using StaticArrays
 using TimerOutputs
 import GR
 
@@ -32,6 +33,8 @@ end
 
 # export types/functions that define the public API of Trixi2Img
 export trixi2img
+
+export ContourPlot
 
 end # module Trixi2Img
 
