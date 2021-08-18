@@ -6,6 +6,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/trixi-framework/Trixi2Img.jl/v0.2.5.svg?style=social&logo=github)](https://github.com/trixi-framework/Trixi2Img.jl)
 
+**Note: This repository is not actively developed anymore. If you want to visualize 
+simulation results created by [Trixi.jl](https://github.com/trixi-framework/Trixi.jl),
+please use another option such as Plots.jl, Makie.jl, or Paraview/Visit via 
+[Trixi2Vtk](https://github.com/trixi-framework/Trixi2Vtk.jl) as described in the 
+[documentation of Trixi.jl](https://trixi-framework.github.io/Trixi.jl/stable/).**
+
 **Trixi2Img.jl** can create PDF/PNG files from output files created by
 [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) (solution or restart
 files). Trixi2Img is part of the [Trixi framework](https://github.com/trixi-framework).
